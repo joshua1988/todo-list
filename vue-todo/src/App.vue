@@ -6,22 +6,22 @@
     <section class="container">
       <div class="todo_box">
           <span class="ipt_tx">
-            <input v-model="inputField" v-on:keyup.enter="addTodo" placeholder="Todo Item" />
+            <input v-model="inputField" @keyup.enter="addTodo" placeholder="Todo Item" />
           </span>
           <button @click="addTodo" class="btn_add">Add Todo</button>
       </div>
       <div class="todo_list">
         <ul class="todo_list_group">
-            <li class="todo_list_item" v-for="todo in todoList">
+            <li class="todo_list_item" v-for="(todo, index) in todoList" :key="index">
               <div class="todo_list_bx">
-                <input type="checkbox" v-on:change="toggle(todo)" v-bind:checked="todo.complete" class="ipt_chk">
+                <input type="checkbox" @change="toggle(todo, index)" @checked="todo.complete" class="ipt_chk">
                 <del v-if="todo.complete" class="todo_tx">
                     <span>{{ todo.name }}</span>
                 </del>
                 <span v-else class="todo_tx">
                     <span>{{ todo.name }}</span>
                 </span>
-                <span @click="deleteTodo(todo)" class="todo_delete">X</span>
+                <span @click="deleteTodo(index)" class="todo_delete">X</span>
               </div>
             </li>
         </ul>
@@ -31,35 +31,48 @@
 </template>
 
 <script>
-import todo from './components/todo.vue';
+var storage = {
+  fetch: function() {
+    return JSON.parse(localStorage.getItem('DAHYUN-TODO'));
+  },
+  save: function(todoList) {
+    var list = JSON.stringify(todoList);
+    localStorage.setItem('DAHYUN-TODO', list);
+  },
+};
 
 export default {
   name: 'app',
-  components: {
-    todo
-  },
   methods: {
     addTodo: function(todo) {
       todo = this.inputField;
-      this.todoList.push({name: todo, complete: false});
+      this.todoList.push({ name: todo, complete: false });
       this.inputField = '';
       console.log(this.todoList);
-  },
-  deleteTodo: function(todo) {
-      var index = this.todoList.indexOf(todo);
+    },
+    deleteTodo: function(index) {
       this.todoList.splice(index, 1);
       console.log(this.todoList);
-  },
-  toggle: function(todo) {
+    },
+    toggle: function(todo, index) {
       todo.complete = !todo.complete;
-  }
-},
-  data () {
+      this.todoList.splice(index, 1, todo);
+    }
+  },
+  data() {
     return {
       inputField: '',
-      todoList: []
+      todoList: [],
     }
-  }
+  },
+  created: function() {
+    this.todoList = storage.fetch();
+  },
+  watch: {
+    todoList: function(value) {
+      storage.save(value);
+    }
+  },
 }
 </script>
 
